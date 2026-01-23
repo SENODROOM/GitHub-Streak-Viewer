@@ -1,10 +1,3 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    user-select: none;
-}
-
 :root {
     --primary: #6366f1;
     --primary-dark: #4f46e5;
@@ -17,6 +10,15 @@
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
     --border: #334155;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) rgba(15, 23, 42, 0.6);
 }
 
 input:-webkit-autofill,
@@ -36,6 +38,41 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
+}
+
+/* WebKit Browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg,
+            var(--primary),
+            var(--secondary),
+            var(--accent));
+    border-radius: 10px;
+    border: 2px solid rgba(15, 23, 42, 0.8);
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg,
+            var(--secondary),
+            var(--accent),
+            var(--primary));
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+}
+
+/* Scrollbar corner (for horizontal + vertical overlap) */
+::-webkit-scrollbar-corner {
+    background: rgba(15, 23, 42, 0.6);
 }
 
 body::before {
