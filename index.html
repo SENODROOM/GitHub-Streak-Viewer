@@ -4,59 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="android-chrome-512x512.png" type="image/x-icon">
     <title>GitHub Stats Viewer</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <div class="container">
-        <h1>🚀 GitHub Stats Viewer</h1>
-
-        <div class="input-group">
-            <label for="username">GitHub Username</label>
-            <input type="text" id="username" placeholder="Enter GitHub username..." value="">
+        <div class="header">
+            <h1>🚀 GitHub Stats Viewer</h1>
+            <p class="subtitle">Track your GitHub journey with beautiful insights</p>
         </div>
 
-        <div class="input-group">
-            <label for="token">Personal Access Token (Required for accurate stats)</label>
-            <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx">
-            <small>
-                🔒 Token is required to fetch accurate contribution data using GraphQL API.<br>
-                <a href="https://github.com/settings/tokens/new?scopes=read:user,repo" target="_blank">Generate token
-                    here</a> (select "read:user" and "repo" scopes)
-            </small>
+        <div class="login-card" id="loginCard">
+            <div class="input-group">
+                <label for="username">GitHub Username</label>
+                <input type="text" id="username" placeholder="Enter your username..." autocomplete="username">
+            </div>
+
+            <div class="input-group">
+                <label for="token">Personal Access Token</label>
+                <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="current-password">
+                <span class="help-text">
+                    🔒 Required for accurate stats via GraphQL API<br>
+                    <a href="https://github.com/settings/tokens/new?scopes=read:user,repo" target="_blank">Generate
+                        token here</a> (select "read:user" and "repo" scopes)
+                </span>
+            </div>
+
+            <button class="btn" onclick="login()">Get My Stats</button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Fetching your GitHub stats...</p>
+            </div>
+
+            <div class="error" id="error"></div>
         </div>
 
-        <button onclick="fetchGitHubStats()">Get Stats</button>
+        <div class="stats-wrapper" id="statsWrapper" style="display: none;">
+            <button class="btn btn-logout" onclick="logout()">🚪 Logout</button>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Fetching GitHub stats...</p>
-        </div>
+            <div class="user-header" id="userHeader"></div>
 
-        <div class="error" id="error"></div>
-
-        <div class="stats-container" id="stats">
-            <div class="user-info" id="userInfo"></div>
             <div class="stats-grid" id="statsGrid"></div>
-            <div class="contribution-chart" id="contributionChart">
-                <h3>Contribution Calendar (Last Year)</h3>
+
+            <div class="contribution-section">
+                <h3>📊 Contribution Calendar (Last Year)</h3>
                 <div class="chart-grid" id="chartGrid"></div>
             </div>
-            <div class="note" id="noteSection">
-                Stats are fetched using GitHub's GraphQL API for maximum accuracy.
+
+            <div class="note">
+                ✨ Stats are fetched using GitHub's GraphQL API for maximum accuracy
             </div>
         </div>
     </div>
 
     <script>
-        async function fetchGitHubStats() {
+        // Check for saved credentials on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUsername = localStorage.getItem('github_username');
+            const savedToken = localStorage.getItem('github_token');
+
+            if (savedUsername && savedToken) {
+                document.getElementById('username').value = savedUsername;
+                document.getElementById('token').value = savedToken;
+                login();
+            }
+        });
+
+        async function login() {
             const username = document.getElementById('username').value.trim();
             const token = document.getElementById('token').value.trim();
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
-            const stats = document.getElementById('stats');
+            const loginCard = document.getElementById('loginCard');
+            const statsWrapper = document.getElementById('statsWrapper');
 
             if (!username) {
                 showError('Please enter a GitHub username');
@@ -64,25 +86,44 @@
             }
 
             if (!token) {
-                showError('Personal Access Token is required for accurate contribution data. Please generate one from GitHub settings.');
+                showError('Personal Access Token is required');
                 return;
             }
 
             loading.style.display = 'block';
             error.style.display = 'none';
-            stats.style.display = 'none';
 
             try {
-                // Fetch data using GraphQL API
                 const statsData = await fetchGraphQLData(username, token);
 
+                // Save credentials to localStorage
+                localStorage.setItem('github_username', username);
+                localStorage.setItem('github_token', token);
+
                 loading.style.display = 'none';
+                loginCard.style.display = 'none';
                 displayStats(statsData);
+                statsWrapper.style.display = 'block';
 
             } catch (err) {
                 loading.style.display = 'none';
-                showError(err.message || 'Failed to fetch GitHub stats. Please check your token and try again.');
+                showError(err.message || 'Failed to fetch GitHub stats');
             }
+        }
+
+        function logout() {
+            // Clear localStorage
+            localStorage.removeItem('github_username');
+            localStorage.removeItem('github_token');
+
+            // Reset form
+            document.getElementById('username').value = '';
+            document.getElementById('token').value = '';
+
+            // Hide stats and show login
+            document.getElementById('statsWrapper').style.display = 'none';
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
         }
 
         async function fetchGraphQLData(username, token) {
@@ -93,13 +134,8 @@
                         login
                         avatarUrl
                         bio
-                        followers {
-                            totalCount
-                        }
+                        followers { totalCount }
                         repositories(first: 100, ownerAffiliations: OWNER, privacy: PUBLIC) {
-                            totalCount
-                        }
-                        repositoriesContributedTo(first: 1, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, REPOSITORY]) {
                             totalCount
                         }
                         contributionsCollection {
@@ -110,14 +146,6 @@
                                         contributionCount
                                         date
                                     }
-                                }
-                            }
-                            commitContributionsByRepository {
-                                contributions {
-                                    totalCount
-                                }
-                                repository {
-                                    nameWithOwner
                                 }
                             }
                             totalCommitContributions
@@ -135,15 +163,12 @@
                     'Authorization': `bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    query: query,
-                    variables: { username: username }
-                })
+                body: JSON.stringify({ query, variables: { username } })
             });
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    throw new Error('Invalid token. Please check your Personal Access Token.');
+                    throw new Error('Invalid token. Please check your credentials.');
                 }
                 throw new Error('Failed to fetch data from GitHub');
             }
@@ -165,7 +190,6 @@
             const contributions = userData.contributionsCollection;
             const calendar = contributions.contributionCalendar;
 
-            // Get all contribution days
             const allDays = [];
             calendar.weeks.forEach(week => {
                 week.contributionDays.forEach(day => {
@@ -176,7 +200,6 @@
                 });
             });
 
-            // Calculate current streak
             let currentStreak = 0;
             const today = new Date().toISOString().split('T')[0];
 
@@ -184,12 +207,10 @@
                 if (allDays[i].count > 0) {
                     currentStreak++;
                 } else if (allDays[i].date < today) {
-                    // Stop if we hit a day with no contributions that's not today
                     break;
                 }
             }
 
-            // Calculate longest streak
             let longestStreak = 0;
             let tempStreak = 0;
 
@@ -202,7 +223,6 @@
                 }
             });
 
-            // Fetch private repos count
             let privateRepoCount = 0;
             try {
                 const reposQuery = `
@@ -228,11 +248,11 @@
                 });
 
                 const reposResult = await reposResponse.json();
-                if (reposResult.data && reposResult.data.user) {
+                if (reposResult.data?.user) {
                     privateRepoCount = reposResult.data.user.repositories.totalCount;
                 }
             } catch (e) {
-                console.log('Could not fetch private repos count');
+                console.log('Could not fetch private repos');
             }
 
             return {
@@ -249,29 +269,32 @@
                 issues: contributions.totalIssueContributions,
                 pullRequests: contributions.totalPullRequestContributions,
                 reviews: contributions.totalPullRequestReviewContributions,
-                currentStreak: currentStreak,
-                longestStreak: longestStreak,
+                currentStreak,
+                longestStreak,
                 contributionDays: allDays
             };
         }
 
         function displayStats(stats) {
-            const userInfo = document.getElementById('userInfo');
+            const userHeader = document.getElementById('userHeader');
             const statsGrid = document.getElementById('statsGrid');
             const chartGrid = document.getElementById('chartGrid');
-            const statsContainer = document.getElementById('stats');
 
             const repoText = stats.privateRepos > 0
-                ? `📦 ${stats.totalRepos} repositories (${stats.publicRepos} public, ${stats.privateRepos} private)`
+                ? `📦 ${stats.totalRepos} repos (${stats.publicRepos} public, ${stats.privateRepos} private)`
                 : `📦 ${stats.totalRepos} repositories`;
 
-            userInfo.innerHTML = `
+            userHeader.innerHTML = `
                 <img src="${stats.avatarUrl}" alt="${stats.login}" class="avatar">
                 <div class="user-details">
                     <h2>${stats.name}</h2>
-                    <p><strong>@${stats.login}</strong></p>
-                    ${stats.bio ? `<p style="margin-top: 8px;">${stats.bio}</p>` : ''}
-                    <p style="margin-top: 8px;">${repoText} • 👥 ${stats.followers} followers</p>
+                    <p class="username">@${stats.login}</p>
+                    ${stats.bio ? `<p class="bio">${stats.bio}</p>` : ''}
+                    <div class="user-meta">
+                        <span>${repoText}</span>
+                        <span>•</span>
+                        <span>👥 ${stats.followers} followers</span>
+                    </div>
                 </div>
             `;
 
@@ -302,7 +325,6 @@
                 </div>
             `;
 
-            // Render contribution calendar
             chartGrid.innerHTML = stats.contributionDays.map(day => {
                 let level = 0;
                 if (day.count > 0) level = 1;
@@ -311,8 +333,6 @@
                 if (day.count > 10) level = 4;
                 return `<div class="day-square level-${level}" title="${day.date}: ${day.count} contributions"></div>`;
             }).join('');
-
-            statsContainer.style.display = 'block';
         }
 
         function showError(message) {
@@ -321,17 +341,11 @@
             error.style.display = 'block';
         }
 
-        // Allow Enter key to submit
-        document.getElementById('username').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                fetchGitHubStats();
-            }
-        });
-
-        document.getElementById('token').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                fetchGitHubStats();
-            }
+        // Enter key listeners
+        ['username', 'token'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
         });
     </script>
 </body>
