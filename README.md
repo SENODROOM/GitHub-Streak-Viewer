@@ -55,7 +55,7 @@ If you want to run it locally:
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/github-streak-viewer.git
+git clone https://github.com/SENODROOM/GitHub-Streak-Viewer.git
 cd github-streak-viewer
 ```
 
