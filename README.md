@@ -11,6 +11,12 @@ A beautiful, modern web application to track and visualize your GitHub contribut
 
 Experience the app live without any installation required!
 
+## 🚀 Demo
+
+![GitHub Streak Viewer Demo](./demo.gif)
+
+> Instantly visualize your GitHub contribution streaks and activity using the GitHub GraphQL API.
+
 ## ✨ Features
 
 - **Real-time GitHub Stats**: Fetch comprehensive statistics directly from GitHub's GraphQL API
