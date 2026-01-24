@@ -124,8 +124,9 @@ The application uses CSS custom properties for easy theming. Edit `styles.css` t
 github-streak-viewer/
 ├── index.html          # Main HTML file
 ├── styles.css          # Styling and animations
+├── script.js           # Program Logic
 ├── android-chrome-512x512.png  # Favicon
-└── README.md          # This file
+└── README.md           # This file
 ```
 
 ## 🔒 Privacy & Security
