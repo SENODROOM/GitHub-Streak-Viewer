@@ -269,8 +269,12 @@ function displayStats(stats) {
         if (day.count > 3) level = 2;
         if (day.count > 6) level = 3;
         if (day.count > 10) level = 4;
-        return `<div class="day-square level-${level}" title="${day.date}: ${day.count} contributions"></div>`;
+        const contributionText = day.count === 1 ? 'contribution' : 'contributions';
+        return `<div class="day-square level-${level}" data-date="${day.date}" data-count="${day.count}"></div>`;
     }).join('');
+
+    // Add hover tooltip functionality
+    addTooltipListeners();
 }
 
 function showError(message) {
@@ -285,3 +289,55 @@ function showError(message) {
         if (e.key === 'Enter') login();
     });
 });
+
+function addTooltipListeners() {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'contribution-tooltip';
+    document.body.appendChild(tooltip);
+
+    const daySquares = document.querySelectorAll('.day-square');
+
+    daySquares.forEach(square => {
+        square.addEventListener('mouseenter', (e) => {
+            const date = e.target.dataset.date;
+            const count = e.target.dataset.count;
+            const contributionText = count === '1' ? 'contribution' : 'contributions';
+
+            tooltip.innerHTML = `
+                <span class="count">${count} ${contributionText} on ${formatDate(date)}.</span>
+            `;
+            tooltip.style.display = 'block';
+            updateTooltipPosition(e, tooltip);
+        });
+
+        square.addEventListener('mousemove', (e) => {
+            updateTooltipPosition(e, tooltip);
+        });
+
+        square.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+    });
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    const day = date.getDate();
+    const suffix = day === 1 || day === 21 || day === 31 ? 'st' :
+        day === 2 || day === 22 ? 'nd' :
+            day === 3 || day === 23 ? 'rd' : 'th';
+
+    return `${months[date.getMonth()]} ${day}${suffix}`;
+}
+
+function updateTooltipPosition(e, tooltip) {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Position tooltip above the cursor, centered
+    const tooltipWidth = tooltip.offsetWidth;
+    tooltip.style.left = (x - tooltipWidth / 2) + 'px';
+    tooltip.style.top = (y - 60) + 'px';
+}
