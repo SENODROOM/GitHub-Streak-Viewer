@@ -3,8 +3,7 @@
 A beautiful, modern web application to track and visualize your GitHub contribution streaks, stats, and activity patterns. Built with vanilla JavaScript and powered by GitHub's GraphQL API for maximum accuracy.
 
 ![GitHub Streak Viewer](https://img.shields.io/badge/Status-Active-success)
-![License](https://img.shields.io/badge/License-Proprietary-red)
-
+[![License](https://img.shields.io/badge/License-Proprietary-red)](LICENSE)
 ## 🌐 Live Demo
 
 **Try it now:** [https://github-streak-viewer.vercel.app/](https://github-streak-viewer.vercel.app/)
