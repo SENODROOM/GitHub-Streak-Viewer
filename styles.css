@@ -489,7 +489,7 @@ input::placeholder {
     background: #1c1c1c;
     border: 1px solid #444;
     color: #fff;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 6px;
     font-size: 13px;
     pointer-events: none;
