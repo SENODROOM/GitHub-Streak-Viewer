@@ -51,8 +51,12 @@
             <div class="stats-grid" id="statsGrid"></div>
 
             <div class="contribution-section">
-                <h3>📈 Contributions Over Time</h3>
+                <div class="chart-header">
+                    <h3>📈 Contributions Over Time <span class="zoom-indicator" id="zoomInfo">Last Year</span></h3>
+                    <button class="btn-reset-zoom" id="resetZoom" style="display: none;">Reset Zoom</button>
+                </div>
                 <canvas id="contributionChart"></canvas>
+                <p class="chart-help">💡 Use mouse wheel to zoom in/out between time ranges</p>
             </div>
 
             <div class="contribution-section">

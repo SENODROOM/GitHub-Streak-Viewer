@@ -345,18 +345,25 @@ function updateTooltipPosition(e, tooltip) {
     tooltip.style.top = (y - 60) + 'px';
 }
 let contributionChartInstance = null;
+let currentZoomLevel = 365; // days to show
+let allContributionData = [];
 
 function renderContributionChart(contributionDays) {
     const ctx = document.getElementById('contributionChart').getContext('2d');
-
+    
+    allContributionData = contributionDays;
+    
     // Destroy previous chart instance if it exists
     if (contributionChartInstance) {
         contributionChartInstance.destroy();
     }
 
+    // Get the data for current zoom level
+    const dataToShow = getDataForZoomLevel(contributionDays, currentZoomLevel);
+    
     // Prepare daily data
-    const dailyData = contributionDays.map(day => day.count);
-    const dailyLabels = contributionDays.map(day => {
+    const dailyData = dataToShow.map(day => day.count);
+    const dailyLabels = dataToShow.map(day => {
         const date = new Date(day.date);
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     });
@@ -399,17 +406,17 @@ function renderContributionChart(contributionDays) {
                     padding: 12,
                     displayColors: false,
                     callbacks: {
-                        title: function (context) {
+                        title: function(context) {
                             const index = context[0].dataIndex;
-                            const date = new Date(contributionDays[index].date);
-                            return date.toLocaleDateString('en-US', {
+                            const date = new Date(dataToShow[index].date);
+                            return date.toLocaleDateString('en-US', { 
                                 weekday: 'short',
-                                month: 'short',
+                                month: 'short', 
                                 day: 'numeric',
                                 year: 'numeric'
                             });
                         },
-                        label: function (context) {
+                        label: function(context) {
                             const count = context.parsed.y;
                             return `${count} contribution${count !== 1 ? 's' : ''}`;
                         }
@@ -448,4 +455,66 @@ function renderContributionChart(contributionDays) {
             }
         }
     });
+
+    // Add mouse wheel zoom functionality
+    const canvas = document.getElementById('contributionChart');
+    canvas.addEventListener('wheel', handleZoom);
+    
+    updateZoomInfo();
+
+    // Reset zoom button functionality
+    const resetButton = document.getElementById('resetZoom');
+    resetButton.onclick = function() {
+        currentZoomLevel = 365;
+        renderContributionChart(allContributionData);
+        resetButton.style.display = 'none';
+    };
+}
+
+function getDataForZoomLevel(data, days) {
+    // Get the last N days of data
+    return data.slice(-days);
+}
+
+function handleZoom(event) {
+    event.preventDefault();
+    
+    const zoomLevels = [7, 14, 30, 60, 90, 180, 365];
+    const currentIndex = zoomLevels.indexOf(currentZoomLevel);
+    
+    if (event.deltaY < 0) {
+        // Zoom in (show less time)
+        if (currentIndex > 0) {
+            currentZoomLevel = zoomLevels[currentIndex - 1];
+        }
+    } else {
+        // Zoom out (show more time)
+        if (currentIndex < zoomLevels.length - 1) {
+            currentZoomLevel = zoomLevels[currentIndex + 1];
+        }
+    }
+    
+    renderContributionChart(allContributionData);
+    
+    // Show reset button if not at full view
+    if (currentZoomLevel !== 365) {
+        document.getElementById('resetZoom').style.display = 'inline-block';
+    } else {
+        document.getElementById('resetZoom').style.display = 'none';
+    }
+}
+
+function updateZoomInfo() {
+    const zoomInfo = document.getElementById('zoomInfo');
+    let timeText = '';
+    
+    if (currentZoomLevel === 7) timeText = 'Last 7 Days';
+    else if (currentZoomLevel === 14) timeText = 'Last 2 Weeks';
+    else if (currentZoomLevel === 30) timeText = 'Last Month';
+    else if (currentZoomLevel === 60) timeText = 'Last 2 Months';
+    else if (currentZoomLevel === 90) timeText = 'Last 3 Months';
+    else if (currentZoomLevel === 180) timeText = 'Last 6 Months';
+    else if (currentZoomLevel === 365) timeText = 'Last Year';
+    
+    zoomInfo.textContent = timeText;
 }
