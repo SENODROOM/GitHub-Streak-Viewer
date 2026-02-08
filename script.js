@@ -348,39 +348,33 @@ let contributionChartInstance = null;
 
 function renderContributionChart(contributionDays) {
     const ctx = document.getElementById('contributionChart').getContext('2d');
-    
+
     // Destroy previous chart instance if it exists
     if (contributionChartInstance) {
         contributionChartInstance.destroy();
     }
 
-    // Group data by week for better visualization
-    const weeklyData = [];
-    const weeklyLabels = [];
-    
-    for (let i = 0; i < contributionDays.length; i += 7) {
-        const weekDays = contributionDays.slice(i, i + 7);
-        const weekTotal = weekDays.reduce((sum, day) => sum + day.count, 0);
-        const weekDate = new Date(weekDays[0].date);
-        
-        weeklyData.push(weekTotal);
-        weeklyLabels.push(weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    }
+    // Prepare daily data
+    const dailyData = contributionDays.map(day => day.count);
+    const dailyLabels = contributionDays.map(day => {
+        const date = new Date(day.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
 
     contributionChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: weeklyLabels,
+            labels: dailyLabels,
             datasets: [{
                 label: 'Contributions',
-                data: weeklyData,
+                data: dailyData,
                 borderColor: 'rgba(99, 102, 241, 1)',
                 backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                borderWidth: 3,
+                borderWidth: 2,
                 fill: true,
                 tension: 0.4,
-                pointRadius: 3,
-                pointHoverRadius: 6,
+                pointRadius: 0,
+                pointHoverRadius: 5,
                 pointBackgroundColor: 'rgba(99, 102, 241, 1)',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
@@ -405,8 +399,19 @@ function renderContributionChart(contributionDays) {
                     padding: 12,
                     displayColors: false,
                     callbacks: {
-                        label: function(context) {
-                            return `${context.parsed.y} contributions`;
+                        title: function (context) {
+                            const index = context[0].dataIndex;
+                            const date = new Date(contributionDays[index].date);
+                            return date.toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            });
+                        },
+                        label: function (context) {
+                            const count = context.parsed.y;
+                            return `${count} contribution${count !== 1 ? 's' : ''}`;
                         }
                     }
                 }
@@ -419,10 +424,10 @@ function renderContributionChart(contributionDays) {
                     },
                     ticks: {
                         color: '#94a3b8',
-                        maxRotation: 45,
-                        minRotation: 45,
+                        maxRotation: 0,
+                        minRotation: 0,
                         autoSkip: true,
-                        maxTicksLimit: 20
+                        maxTicksLimit: 12
                     }
                 },
                 y: {
