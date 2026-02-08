@@ -263,6 +263,9 @@ function displayStats(stats) {
                 </div>
             `;
 
+    // Render the line chart
+    renderContributionChart(stats.contributionDays);
+
     chartGrid.innerHTML = stats.contributionDays.map(day => {
         let level = 0;
         if (day.count > 0) level = 1;
@@ -340,4 +343,104 @@ function updateTooltipPosition(e, tooltip) {
     const tooltipWidth = tooltip.offsetWidth;
     tooltip.style.left = (x - tooltipWidth / 2) + 'px';
     tooltip.style.top = (y - 60) + 'px';
+}
+let contributionChartInstance = null;
+
+function renderContributionChart(contributionDays) {
+    const ctx = document.getElementById('contributionChart').getContext('2d');
+    
+    // Destroy previous chart instance if it exists
+    if (contributionChartInstance) {
+        contributionChartInstance.destroy();
+    }
+
+    // Group data by week for better visualization
+    const weeklyData = [];
+    const weeklyLabels = [];
+    
+    for (let i = 0; i < contributionDays.length; i += 7) {
+        const weekDays = contributionDays.slice(i, i + 7);
+        const weekTotal = weekDays.reduce((sum, day) => sum + day.count, 0);
+        const weekDate = new Date(weekDays[0].date);
+        
+        weeklyData.push(weekTotal);
+        weeklyLabels.push(weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    }
+
+    contributionChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: weeklyLabels,
+            datasets: [{
+                label: 'Contributions',
+                data: weeklyData,
+                borderColor: 'rgba(99, 102, 241, 1)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: 'rgba(139, 92, 246, 1)',
+                pointHoverBorderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.5,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#94a3b8',
+                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} contributions`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(51, 65, 85, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: true,
+                        maxTicksLimit: 20
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(51, 65, 85, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        precision: 0
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
 }

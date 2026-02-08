@@ -7,6 +7,7 @@
     <title>GitHub Streak Viewer</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="shortcut icon" href="android-chrome-512x512.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -48,6 +49,11 @@
             <div class="user-header" id="userHeader"></div>
 
             <div class="stats-grid" id="statsGrid"></div>
+
+            <div class="contribution-section">
+                <h3>📈 Contributions Over Time</h3>
+                <canvas id="contributionChart"></canvas>
+            </div>
 
             <div class="contribution-section">
                 <h3>📊 Contribution Calendar (Last Year)</h3>
