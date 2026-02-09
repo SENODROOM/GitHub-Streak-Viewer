@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Streak Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+        <span id="themeIcon">☀️</span>
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚀 GitHub Streak Viewer</h1>
+            <p class="subtitle">Track your GitHub journey with beautiful insights</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-card" id="loginCard">
+            <div class="input-group">
+                <label for="username">GitHub Username</label>
+                <input type="text" id="username" placeholder="Enter your username..." autocomplete="username">
+            </div>
+
+            <div class="input-group">
+                <label for="token">Personal Access Token</label>
+                <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="current-password">
+                <span class="help-text">
+                    🔒 Required for accurate stats via GraphQL API
+                    <a href="https://github.com/settings/tokens/new?scopes=read:user,repo" target="_blank">Generate
+                        token here</a> (select "read:user" and "repo" scopes)
+                </span>
+            </div>
+
+            <button class="btn" onclick="login()">Get My Stats</button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Fetching your GitHub stats...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+        </div>
+
+        <!-- Stats Wrapper -->
+        <div class="stats-wrapper" id="statsWrapper" style="display: none;">
+            <!-- Top Actions -->
+            <div class="top-actions">
+                <button class="btn btn-settings" onclick="openSettings()">⚙️ Settings</button>
+                <button class="btn btn-export" id="exportStats">💾 Export Stats</button>
+                <button class="btn btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <!-- Customizable Container -->
+            <div class="customizable-container" id="customizableContainer">
+                
+                <!-- User Header Section -->
+                <div class="draggable-section" data-section-id="user-header" data-section-name="User Profile">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="user-header">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="user-header" id="userHeader"></div>
+                </div>
+
+                <!-- Stats Grid Section -->
+                <div class="draggable-section" data-section-id="stats-grid" data-section-name="Statistics Grid">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="stats-grid">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="stats-grid" id="statsGrid"></div>
+                </div>
+
+                <!-- Achievements Section -->
+                <div class="draggable-section" data-section-id="achievements" data-section-name="Achievements">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="achievements">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="contribution-section">
+                        <h3>🏆 Achievements</h3>
+                        <div class="achievements-grid" id="achievementsGrid"></div>
+                    </div>
+                </div>
+
+                <!-- Language Statistics Section -->
+                <div class="draggable-section" data-section-id="languages" data-section-name="Programming Languages">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="languages">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="contribution-section">
+                        <h3>💻 Most Used Languages</h3>
+                        <div class="languages-container">
+                            <div class="language-stats" id="languageStats"></div>
+                            <div class="language-pie-chart" id="languagePieChart">
+                                <canvas id="languagePieChartCanvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Repositories Section -->
+                <div class="draggable-section" data-section-id="top-repos" data-section-name="Top Repositories">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="top-repos">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="contribution-section">
+                        <h3>⭐ Top Repositories</h3>
+                        <div class="repos-grid" id="topRepos"></div>
+                    </div>
+                </div>
+
+                <!-- Activity Pattern Section -->
+                <div class="draggable-section" data-section-id="activity-pattern" data-section-name="Activity Pattern">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="activity-pattern">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="contribution-section">
+                        <h3>📅 Activity Pattern by Day</h3>
+                        <p class="section-subtitle">Average contributions per day of the week</p>
+                        <div class="activity-heatmap" id="activityHeatmap"></div>
+                    </div>
+                </div>
+
+                <!-- Contribution Chart Section -->
+                <div class="draggable-section" data-section-id="contribution-chart" data-section-name="Contribution Chart">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="contribution-chart">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="contribution-section">
+                        <div class="chart-header">
+                            <h3>📈 Contributions Over Time <span class="zoom-indicator" id="zoomInfo">Last Year</span></h3>
+                            <button class="btn-reset-zoom" id="resetZoom" style="display: none;">Reset Zoom</button>
+                        </div>
+                        <canvas id="contributionChart"></canvas>
+                        <p class="chart-help">💡 Use mouse wheel to zoom in/out between time ranges</p>
+                    </div>
+                </div>
+
+                <!-- Contribution Calendar Section -->
+                <div class="draggable-section" data-section-id="contribution-calendar" data-section-name="Contribution Calendar">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="contribution-calendar">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="contribution-section">
+                        <h3>📊 Contribution Calendar (Last Year)</h3>
+                        <div class="chart-grid" id="chartGrid"></div>
+                    </div>
+                </div>
+
+                <!-- Note Section -->
+                <div class="draggable-section" data-section-id="note" data-section-name="Info Note">
+                    <div class="section-controls customize-mode-only">
+                        <span class="drag-handle">⋮⋮</span>
+                        <button class="btn-toggle-section" data-section="note">
+                            <span class="toggle-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="note">
+                        ✨ Stats are fetched using GitHub's GraphQL API for maximum accuracy
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>⚙️ Settings</h2>
+                <button class="settings-close" onclick="closeSettings()" aria-label="Close settings">×</button>
+            </div>
+
+            <div class="settings-body">
+                <!-- Customize Layout Section -->
+                <div class="setting-group setting-group-highlight">
+                    <h3>🎨 Customize Layout</h3>
+                    <p class="setting-description">Personalize your dashboard by reordering sections and hiding elements you don't need.</p>
+                    <button class="btn btn-customize" onclick="enterCustomizeMode()">
+                        ✏️ Enter Customize Mode
+                    </button>
+                </div>
+
+                <div class="setting-divider"></div>
+
+                <div class="setting-group">
+                    <label for="chartTypeSelect">Contribution Chart Type</label>
+                    <select id="chartTypeSelect" class="setting-select">
+                        <option value="line">Line Chart</option>
+                        <option value="bar">Bar Chart</option>
+                    </select>
+                    <span class="setting-description">Choose how to display your contribution timeline</span>
+                </div>
+
+                <div class="setting-group">
+                    <label for="dateFormatSelect">Date Format</label>
+                    <select id="dateFormatSelect" class="setting-select">
+                        <option value="MMM DD, YYYY">MMM DD, YYYY (Jan 15th, 2024)</option>
+                        <option value="DD/MM/YYYY">DD/MM/YYYY (15/01/2024)</option>
+                        <option value="MM/DD/YYYY">MM/DD/YYYY (01/15/2024)</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD (2024-01-15)</option>
+                    </select>
+                    <span class="setting-description">Format for displaying dates in tooltips</span>
+                </div>
+
+                <div class="setting-group">
+                    <label for="exportFormatSelect">Export Format</label>
+                    <select id="exportFormatSelect" class="setting-select">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                    <span class="setting-description">Default format for exporting stats</span>
+                </div>
+
+                <div class="setting-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showPrivateRepos" class="setting-checkbox">
+                        <span class="checkbox-custom"></span>
+                        <span>Include Private Repositories</span>
+                    </label>
+                    <span class="setting-description">Show private repos in total count (requires token with repo scope)</span>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button class="btn btn-primary" onclick="applySettings()">Apply Settings</button>
+                <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customize Mode Overlay -->
+    <div class="customize-overlay" id="customizeOverlay" style="display: none;">
+        <div class="customize-toolbar">
+            <div class="customize-toolbar-content">
+                <h3>🎨 Customize Mode</h3>
+                <p>Drag sections to reorder • Click the eye icon to hide/show sections</p>
+            </div>
+            <div class="customize-toolbar-actions">
+                <button class="btn btn-reset" onclick="resetLayout()">🔄 Reset Layout</button>
+                <button class="btn btn-done" onclick="exitCustomizeMode()">✅ Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
