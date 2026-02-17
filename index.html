@@ -17,6 +17,7 @@
             <p class="subtitle">Track your GitHub journey with beautiful insights</p>
         </div>
 
+        <!----------------- (LOGIN) ------------------>
         <div class="login-card" id="loginCard">
             <div class="input-group">
                 <label for="username">GitHub Username</label>
@@ -43,13 +44,20 @@
             <div class="error" id="error"></div>
         </div>
 
+
+        <!--------------- (MAIN PAGE) ---------------->
         <div class="stats-wrapper" id="statsWrapper" style="display: none;">
+
+            <!----------------- (LOGOUT BUTTON) ------------------>
             <button class="btn btn-logout" onclick="logout()">🚪 Logout</button>
 
+            <!-- (USER HEADER: NAME, PROFILE PIC, TOTAL REPOS) -->
             <div class="user-header" id="userHeader"></div>
 
+            <!-------------- (STATS BOARD: STREAK) ------------->
             <div class="stats-grid" id="statsGrid"></div>
 
+            <!-------------- (CONTRIBUTION GRAPH) ------------>
             <div class="contribution-section">
                 <div class="chart-header">
                     <h3>📈 Contributions Over Time <span class="zoom-indicator" id="zoomInfo">Last Year</span></h3>
@@ -59,6 +67,7 @@
                 <p class="chart-help">💡 Use mouse wheel to zoom in/out between time ranges</p>
             </div>
 
+            <!------------- (CONTRIBUTION GRID) ----------->
             <div class="contribution-section">
                 <h3>📊 Contribution Calendar (Last Year)</h3>
                 <div class="chart-grid" id="chartGrid"></div>
